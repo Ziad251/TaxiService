@@ -1,0 +1,21 @@
+@*
+
+*@
+@{
+    var destination = ViewBag.destination as string;
+}
+<div>
+    <div id="myMap"></div>
+    <button id="FindNearest" onclick="checkNearby()"> Find Nearest</button>
+    <button id="SwitchToSecondRoute" onclick="InitSecondRoute('@destination')"> Second Route</button>
+    <script>
+
+        navigator.geolocation.getCurrentPosition(success);
+
+        function success(pos) {
+            InitLocation(pos);
+            GetMap();
+        }
+
+    </script>
+</div>

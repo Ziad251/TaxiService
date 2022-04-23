@@ -1,0 +1,12 @@
+
+#myMap {
+    width: 1000px;
+    height: 500px;
+    border: 1px;
+    border-color: black;
+}
+
+#SwitchToSecondRoute {
+    width: 100px; 
+    height: 100px;
+}

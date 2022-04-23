@@ -1,0 +1,29 @@
+﻿@*
+
+*@
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+     <form action="/map/" method="post">
+        <div class="col-md-8">
+            <div class="d-flex form-inputs">
+                <input class="form-control" type="text" name="search" placeholder="Search any product...">
+                <i class="bx bx-search"></i>
+            </div>
+        </div>
+        <div>
+            <button id="1" class="bi bi-search"></button>
+        </div>
+    </form>
+
+    <script>
+        const searchBtn = document.getElementById("1");
+        const form = document.querySelector("form");
+
+        searchBtn.addEventListener("click", () => {
+            console.log("search clicked");
+            form.submit();
+        })
+    </script>
