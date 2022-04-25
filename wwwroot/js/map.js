@@ -1,18 +1,22 @@
-let map, datasource, userLocation, finalRoute;
+var map, datasource, userLocation, finalRoute, mapNode, key;
 
-function GetMap() {
+function GetMap(des) {
+
+    // Get a refrence to our map container div.
+    mapNode = document.querySelector('#myMap');
+    // Intialize our key variable 
+    key = commonSettings;
 
     //Initialize a map instance.
-    //Center map to user's location
+    //Center map to user's location.
     map = new atlas.Map("myMap", {
         center: [userLocation.geometry.coordinates[0], userLocation.geometry.coordinates[1]],
         zoom: 12,
         language: 'en-US',
         view: 'Auto',
-        // Add your Azure Maps primary subscription key. https://aka.ms/am-primaryKey
         authOptions: {
             authType: 'subscriptionKey',
-            subscriptionKey: '_DoxchRePd4oXlazgEE0MmKfwMNdwK_olMeg1Lg5fAs'
+            subscriptionKey: key
         }
     });
 
@@ -50,36 +54,15 @@ function GetMap() {
             lineCap: 'round'
         }), 'labels');
 
-        console.log(`map layer added. Current user location is ${userLocation}`);
         if (userLocation) {
-            console.log(`user location available and added to datasource ${userLocation}`);
             datasource.add(userLocation);
         }
-        // if (TestDataSet) {
-        //     console.log(`test dataset available and added to datasource`);
-        //     datasource.add(TestDataSet);
-        // }
-
-        // if (userLocation === undefined) {
-        //     console.log("user location unavailable calling update");
-        //     var newUserLocation = updateLocation();
-        //     console.log(`new user retrieved ${ newUserLocation }`);
-        //     if (newUserLocation) {
-        //         datasource.add(newUserLocation);
-        //         checkNearby();
-        //         console.log(`added new location ${ newUserLocation } to ${ datasource }`);
-        //     }
-        // }
-
-
-        console.log("end of map ready event");
-
+        RouteToDestination(des);
     });
-
-
 
 };
 
+// at startup initialize userLocation and update server with the most recent location
 function InitLocation(pos) {
 
     userLocation =
@@ -92,48 +75,39 @@ function InitLocation(pos) {
         },
 
     };
-    console.log(userLocation);
+    let initBuffer = [];
+    let count = 0;
+    const position = {
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+        ts: pos.timestamp
+    };
+
+    if (count <= 0) {
+        initBuffer.push(position);
+        let initblob = new Blob([JSON.stringify(initBuffer)], { type: 'application/json' });
+        (async () => {
+            const firstTimer = await fetch('/api/position', {
+                method: 'post',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: initblob,
+            }).catch(error => alert("Unable to send location to server"));
+            // let content = await firstTimer.json();
+        })();
+        initBuffer = [];
+        count++;
+    }
     return userLocation;
-    //createTestData(100);
 }
 
-//var random = mulberry32(31142523452);
 
-// function createTestData(n) {
+// Continiously store and update server with user's location every 2 minutes 
+function UpdateLocation () {
 
-//     console.log(random.next());
-
-//     var test =
-//     {
-//         type: 'Feature',
-//         geometry:
-//         {
-//             type: 'Point',
-//             coordinates: [userLocation.geometry.coordinates[0] - random.next()/10, userLocation.geometry.coordinates[1] + random.next()/10],
-//         },
-//     }
-//     TestDataSet.push(test);
-//     if (n > 0) {
-//         createTestData(n - 1);
-//     }
-// };
-
-// function mulberry32(a) {
-//     "use strict";
-//     return {
-//         next: function () {
-//             a |= 0; a = a + 0x6D2B79F5 | 0;
-//             var t = Math.imul(a ^ a >>> 15, 1 | a);
-//             t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-//             return ((t ^ t >>> 14) >>> 0) / 4294967296;
-//         }
-//     }
-// };
-
-function updateLocation() {
-
-    console.log(`updateLocation called`);
-
+    // watch user's location using the GeoLocation API
     navigator.geolocation.watchPosition(pos => {
 
         const position = {
@@ -142,12 +116,11 @@ function updateLocation() {
             ts: pos.timestamp
         };
 
-        var dataBuffer = [];
+        let dataBuffer = [];
 
-
+        // store user's position in an array every 10 seconds
         setInterval(function () {
             dataBuffer.push(position);
-            console.log("new postion added to buffer");
         }, 10000);
 
         userLocation =
@@ -160,16 +133,14 @@ function updateLocation() {
             },
 
         };
-        console.log(`userLocation initialized ${userLocation}`);
 
-        // send every 10 seconds if there's new data
+        // send every 2 mins if there's new data
         setInterval(function () {
             if (dataBuffer.length) {
-                var blob = new Blob([JSON.stringify(dataBuffer)], { type: 'application/json' });
+                let blob = new Blob([JSON.stringify(dataBuffer)], { type: 'application/json' });
                 navigator.sendBeacon('/api/position', blob);
                 dataBuffer = [];
             }
-            console.log(`data buffer sent and emptied ${dataBuffer}`);
         }, 1200000);
 
         return userLocation;
@@ -177,9 +148,8 @@ function updateLocation() {
 };
 
 
-function buildFeatures(usersLocationData) {
-    let positions = usersLocationData.map(user => {
-        console.log(`position features built ${positions}`);
+function BuildFeatures(usersData) {
+    let positions = usersData.map(user => {
         return {
             type: 'Feature',
             geometry: {
@@ -198,30 +168,34 @@ function buildFeatures(usersLocationData) {
     });
 };
 
-function InitSecondRoute(des) {
+function RouteToDestination(des) {
     //Remove any previous results from the map.
     datasource.clear();
-    console.log("button clicked");
+    let FindNearest = document.createElement('button');
+    FindNearest.innerHTML = "Order ride";
+    FindNearest.id = "FindNearest";
+    let price = document.createElement('button');
+    price.innerHTML = "$208.99";
+    price.id = "price";
+    price.disabled = true;
 
-    // Convert address to coordinates
-    key = "_DoxchRePd4oXlazgEE0MmKfwMNdwK_olMeg1Lg5fAs";
-    var geoCodingApi = `https://atlas.microsoft.com/search/address/json?subscription-key=${key}&api-version=1.0&language=en-US&`;
-    var query = `query=${des}`;
+    // Convert destination address to coordinates
+    
+    let geoCodingApi = `https://atlas.microsoft.com/search/address/json?subscription-key=${key}&api-version=1.0&language=en-US&`;
+    let query = `query=${des}`;
+
+    // make a request to the geocoding api for coordinates to user's destination address
     fetch(geoCodingApi + query, { method: 'get' })
-        .then(response => {
-            console.log(response)
+        .then(response => { 
             return response.json()
         })
         .then(json => {
-            console.log(json)
             return json.results;
         })
         .then(data => {
 
-            console.log(data[0]);
-
             //Create a Feature for finalRoute
-            var finalR =
+            let finalR =
             {
                 type: 'Feature',
                 geometry:
@@ -231,18 +205,15 @@ function InitSecondRoute(des) {
                 },
             }
             datasource.add(finalR);
-            console.log(`final destination is ${finalR}`);
 
             // Use MapControlCredential to share authentication between a map control and the service module.
-            var pipeline = atlas.service.MapsURL.newPipeline(new atlas.service.MapControlCredential(map));
+            let pipeline = atlas.service.MapsURL.newPipeline(new atlas.service.MapControlCredential(map));
 
             //Construct the RouteURL object
-            var routeURL = new atlas.service.RouteURL(pipeline);
-
+            let routeURL = new atlas.service.RouteURL(pipeline);
 
             // Start and end point input to the routeURL
-            var coordinates = [[userLocation.geometry.coordinates[0], userLocation.geometry.coordinates[1]], [finalR.geometry.coordinates[0], finalR.geometry.coordinates[1]]];
-            console.log(`coordinates are ${coordinates}`);
+            let coordinates = [[userLocation.geometry.coordinates[0], userLocation.geometry.coordinates[1]], [finalR.geometry.coordinates[0], finalR.geometry.coordinates[1]]];
 
             // Make a search route request
             routeURL.calculateRouteDirections(atlas.service.Aborter.timeout(10000), coordinates).then((directions) => {
@@ -256,27 +227,55 @@ function InitSecondRoute(des) {
                 zoom: 10,
                 padding: 15
             });
+        }).catch(error => {
+            return alert("Invalid destination provided. Please reenter correct address.");
+            
         });
+
+    FindNearest.addEventListener('click', () => {
+        checkNearby()
+    });
+    mapNode.appendChild(FindNearest);
+    mapNode.appendChild(price);
 };
 
+// Send a request to server to find for the driver nearest to user's most recent location
 function checkNearby() {
     //Remove  any previous results from the map.
     datasource.clear();
-    console.log("button clicked");
-    //Extract GeoJSON feature collection from the response and add it to the datasource
-    fetch('/api/nearbyusers', { method: 'get' })
-        .then(r => {
-            console.log(r)
+    mapNode.removeChild(price);
+    mapNode.removeChild(FindNearest);
 
+    //Construct driver profile card
+    let driverProfile = document.createElement('div');
+    let driverImage = document.createElement('img');
+    let callDriver = document.createElement('button');
+    let driverTitle = document.createElement('p');
+
+    // Make a request for the nearest driver
+    fetch('/api/nearbyusers', { method: 'get' })
+        .then(r => {          
             return r.json()
         }).then(js => {
             return js
         }).then((data) => {
-            console.log(data)
+            // Construct driver's profile using the data sent from server
+            driverProfile.id = "driverProfile";
+            driverTitle.innerHTML = `${data.name.first} ${data.name.last} <br> <br> ETA: 20 mins`; 
+            if(data.picture){
+                driverImage.src = `${data.picture.thumbnail}`;
+            }
+            if(data.phone){
+                callDriver.innerHTML = `${data.phone}`;
+            }
+            driverProfile.appendChild(driverTitle);
+            driverProfile.appendChild(driverImage);
+            driverProfile.appendChild(callDriver);
+            mapNode.appendChild(driverProfile);
+            
+            let destination = data.location.cordinates.geo.Coordinates.Values;
 
-            var destination = data.location.cordinates.geo.Coordinates.Values;
-
-            var dest =
+            let dest =
             {
                 type: 'Feature',
                 geometry:
@@ -286,24 +285,21 @@ function checkNearby() {
                 },
             }
             datasource.add(dest);
-            console.log(`destination is ${destination[0]}, ${destination[1]}`);
-
 
             // Use MapControlCredential to share authentication between a map control and the service module.
-            var pipeline = atlas.service.MapsURL.newPipeline(new atlas.service.MapControlCredential(map));
+            let pipeline = atlas.service.MapsURL.newPipeline(new atlas.service.MapControlCredential(map));
 
             //Construct the RouteURL object
-            var routeURL = new atlas.service.RouteURL(pipeline);
+            let routeURL = new atlas.service.RouteURL(pipeline);
 
 
             // Start and end point input to the routeURL
-            var coordinates = [[userLocation.geometry.coordinates[0], userLocation.geometry.coordinates[1]], [dest.geometry.coordinates[0], dest.geometry.coordinates[1]]];
-            console.log(`coordinates are ${coordinates}`);
+            let coordinates = [[userLocation.geometry.coordinates[0], userLocation.geometry.coordinates[1]], [dest.geometry.coordinates[0], dest.geometry.coordinates[1]]];
 
             // Make a search route request
             routeURL.calculateRouteDirections(atlas.service.Aborter.timeout(10000), coordinates).then((directions) => {
                 //Get data features from response
-                var data = directions.geojson.getFeatures();
+                let data = directions.geojson.getFeatures();
                 datasource.add(data);
             });
 
@@ -313,6 +309,7 @@ function checkNearby() {
                 padding: 15
             });
 
-        }
-        );
+        }).catch(error => {
+            return alert("No drivers nearby please try again later.");
+        });
 };

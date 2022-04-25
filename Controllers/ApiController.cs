@@ -14,47 +14,50 @@ namespace mapsmvcwebapp.Controllers
     [Route("api")]
     public class ApiController : Controller
     {
-
-        private readonly FakeUsers _fetchUsers;
-        private mongoServiceUser _userDB;
+        private MongoCollection _userDB;
         private IGetClaimsProvider _userClaims;
 
-        public ApiController(FakeUsers users, mongoServiceUser userDB, IGetClaimsProvider userClaims)
+        public ApiController(MongoCollection userDB, IGetClaimsProvider userClaims)
         {
-            _fetchUsers = users;
             _userDB = userDB;
             _userClaims = userClaims;
         }
 
         [HttpPost("position")]
-        public async Task<IActionResult> Position([FromBody] JsonElement pos)
+        public async void Position([FromBody] JsonElement pos)
         {
             string uid = _userClaims.Username;
-            var user = await _userDB.GetAsync(uid);
-             if(user == null){
-                 throw new ArgumentNullException();
+             if(uid == null){
+                 Log.Error("User logged in but their claims was inaccessible.");
+                 throw new InvalidDataException();
             }
+            var user = await _userDB.GetAsync(uid);
             var userLocs = JsonSerializer.Deserialize<List<TimeStampedLocation>>(pos.ToString());
             userLocs.ForEach(u => u.username = uid);
-            user.timestamp.Add(userLocs);
-            await _userDB.CreateOneAsync(user);
-            return Ok();
+            var timestamps = user.timestamp;
+            if(timestamps == null){
+                    timestamps = new List<List<TimeStampedLocation>>();
+            }
+            timestamps.Add(userLocs);
+            user.timestamp = timestamps;
+            await _userDB.ReplaceAsync(user, user);
         }
 
 
         [HttpGet("nearbyusers")]
-        public string NearbyUsers()
+        public async Task<string> NearbyUsers()
         {
           
             string uid = _userClaims.Username;
-            var user = _userDB.GetAsync(uid);
-             if(user.Result == null){
-                 throw new ArgumentNullException();
+            var user = await _userDB.GetAsync(uid);
+             if(user == null){
+                 return String.Empty;
+                 throw new InvalidDataException();
             }
-            var nearestUser = _userDB.GetNearbyAsync(user.Result); 
-            var nearesresUserJson = JsonSerializer.Serialize(nearestUser.Result);
+            var nearestUser = await _userDB.GetNearbyAsync(user); 
+            var nearesresUserJson = JsonSerializer.Serialize(nearestUser);
             if(nearestUser == null){
-                throw new ArgumentNullException();
+                return String.Empty;
             }
             return nearesresUserJson;
         }

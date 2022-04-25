@@ -6,10 +6,7 @@ namespace mapsmvcwebapp.Services
 {
     public class GetClaimsFromUser : IGetClaimsProvider
     {
-        // public const string Name = "last";
-        // public const string GivenName = "GivenName"; 
-        // public const string MobilePhone = "MobilePhone"; 
-        // public const string Email = "Email";  
+      
          public const string UserName = "username";
 
 
@@ -32,14 +29,5 @@ namespace mapsmvcwebapp.Services
     }
 
 
-        // var shopKeyString = accessor.HttpContext?.User.Claims.SingleOrDefault(x => x.Type == ShopKeyClaimName)?.Value;
-
-        // public int ShopKey { get; private set; }
-        // public string DistrictManagername { get; private set; }
-            // DistrictManagername = accessor.HttpContext?.User.Claims.SingleOrDefault(x => x.Type == DistrictManagernameClaimName)?.Value;
-            // if (shopKeyString != null)
-            // {
-            //     int.TryParse(shopKeyString, out var shopKey);
-            //     ShopKey = shopKey;
-            // }
+       
 }

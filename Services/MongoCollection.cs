@@ -11,7 +11,7 @@ using MongoDB.Bson.IO;
 
 namespace mapsmvcwebapp.Services
 {
-    public class mongoServiceUser
+    public class MongoCollection
     {
         private IMongoCollection<User> _mapsCollection;
         private IGetClaimsProvider _userClaims;
@@ -21,7 +21,7 @@ namespace mapsmvcwebapp.Services
         private User user;
         private User nearestUser;
 
-        public mongoServiceUser(IOptions<DatabaseSettings> DatabaseSettings, IGetClaimsProvider userClaims)
+        public MongoCollection(IOptions<DatabaseSettings> DatabaseSettings, IGetClaimsProvider userClaims)
         {
             var mongoClient = new MongoClient(
                 DatabaseSettings.Value.ConnectionString);
@@ -31,8 +31,8 @@ namespace mapsmvcwebapp.Services
 
             _mapsCollection = mongoDatabase.GetCollection<User>(
                DatabaseSettings.Value.CollectionName);
-               
-               _userClaims = userClaims;
+
+            _userClaims = userClaims;
         }
 
         public async Task<List<User>> GetAsync() =>
@@ -50,10 +50,11 @@ namespace mapsmvcwebapp.Services
 
         public async Task<User?> GetAsync(string username)
         {
-            try{
-            return await _mapsCollection.Find(x => x.login.username == username).FirstOrDefaultAsync();
+            try
+            {
+                return await _mapsCollection.Find(x => x.login.username == username).FirstOrDefaultAsync();
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Log.Error($"no user under that name. Error: {e}");
                 return user;
@@ -63,22 +64,23 @@ namespace mapsmvcwebapp.Services
         }
 
         public async Task<User> GetNearbyAsync(User user)
-        { 
+        {
 
-            if(user == null){
-                 throw new ArgumentNullException();
+            if (user == null)
+            {
+                throw new ArgumentNullException();
             }
 
             // Instantiate builder
             var builder = Builders<User>.Filter;
 
-            // Set center point to Magnolia Bakery on Bleecker Street
-            var point = user.location.cordinates.geo;
+            // Set center point to User's most recent location
+            var points = user.timestamp[user.timestamp.Count - 1][user.timestamp[user.timestamp.Count - 1].Count - 1];
+            GeoJsonPoint<GeoJson2DCoordinates> point = GeoJson.Point(GeoJson.Position(points.longitude, points.latitude));
 
-            // Create geospatial query that searches for Users at most 10,000 meters away,
-            // and at least 2,000 meters away from Magnolia Bakery (AKA, our center point)
+            // Create geospatial query that searches for Users at most 10000 meters away,
+            // and at least 5 meters away from our center point.
             var filter = builder.Near(db => db.location.cordinates.geo, point, maxDistance: 10000, minDistance: 5);
-            Logg("$near", filter);
 
             return await _mapsCollection.Find(filter).FirstOrDefaultAsync();
         }
@@ -89,8 +91,8 @@ namespace mapsmvcwebapp.Services
         public async Task CreateManyAsync(List<User> newUsers) =>
             await _mapsCollection.InsertManyAsync(newUsers);
 
-        // public async Task UpdateLocationAsync(Coordinates coord, User updatedUser) =>
-        //     await _mapsCollection.ReplaceOneAsync(x => x.location.cordinates == coord, updatedUser);
+        public async Task ReplaceAsync(User oldUser, User updatedUser) =>
+            await _mapsCollection.ReplaceOneAsync(user => user.Id == oldUser.Id, updatedUser);
 
         public async Task UpdateAsync()
         {
@@ -101,27 +103,15 @@ namespace mapsmvcwebapp.Services
             cordinates.latitude = (float)(52 - _m32.Next() / 10);
             cordinates.longitude = (float)(21 - _m32.Next() / 10);
 
-            foreach(var document in documents)
+            foreach (var document in documents)
             {
-            document.location.cordinates = cordinates;
-            await _mapsCollection.InsertOneAsync(document);
+                document.location.cordinates = cordinates;
+                await _mapsCollection.InsertOneAsync(document);
             }
         }
 
         public async Task RemoveAsync(string id) =>
             await _mapsCollection.DeleteOneAsync(x => x.identity.value == id);
-
-            
-        private static void Logg(string exampleName, FilterDefinition<User> filter)
-        {
-            var serializerRegistry = BsonSerializer.SerializerRegistry;
-            var documentSerializer = serializerRegistry.GetSerializer<User>();
-            var rendered = filter.Render(documentSerializer, serializerRegistry);
-            Console.WriteLine($"{exampleName} example:");
-            Console.WriteLine(rendered.ToJson(new JsonWriterSettings { Indent = true }));
-            Console.WriteLine();
-        }
-
 
     }
 }

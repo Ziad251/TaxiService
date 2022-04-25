@@ -112,5 +112,3 @@ C:\Users\HP\Desktop\both\mapsmvcwebapp\obj\Debug\net6.0\refint\mapsmvcwebapp.dll
 C:\Users\HP\Desktop\both\mapsmvcwebapp\obj\Debug\net6.0\mapsmvcwebapp.pdb
 C:\Users\HP\Desktop\both\mapsmvcwebapp\obj\Debug\net6.0\mapsmvcwebapp.genruntimeconfig.cache
 C:\Users\HP\Desktop\both\mapsmvcwebapp\obj\Debug\net6.0\ref\mapsmvcwebapp.dll
-C:\Users\HP\Desktop\both\mapsmvcwebapp\bin\Debug\net6.0\AzMaps\startbootstrap-sb-admin\package-lock.json
-C:\Users\HP\Desktop\both\mapsmvcwebapp\bin\Debug\net6.0\AzMaps\startbootstrap-sb-admin\package.json

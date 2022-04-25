@@ -1,4 +1,4 @@
-/* html {
+html {
   font-size: 14px;
 }
 
@@ -14,5 +14,20 @@ html {
 }
 
 body {
-  margin-bottom: 60px;
-} */
+  margin-bottom: 0px;
+}
+
+
+.landing_page {
+  background-image: url("../images/decry-yae-WnoQ2nK0p_w-unsplash.jpg");
+  width: 100%;
+  height: 100%;
+  /* Center and scale the image nicely */
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.register{
+  font-size: 16px;
+}

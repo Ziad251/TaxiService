@@ -1,0 +1,40 @@
+@{
+    var error = TempData["Error"] as string;
+    
+}
+@if (!string.IsNullOrEmpty(error))
+{
+    <h2 class="alert-danger" style="padding: 20px;">@error</h2>
+}
+<h1 class="h3 mb-3 fw-normal">Sign up</h1>
+<main class="form-signin">
+     <form action="/register" method="post">
+     <div class="form-floating">
+            <label for="floatingInput">First Name</label>
+            <input type="text" class="form-control" name="Firstname" id="floatingInput" placeholder="first name" required>
+        </div>
+        <div class="form-floating">
+            <label for="floatingInput">Last Name</label>
+            <input type="text" class="form-control" name="Lastname" id="floatingInput" placeholder="last name" required>
+        </div>
+        <div class="form-floating">
+            <label for="floatingInput">Username</label>
+            <input type="text" class="form-control" name="Username" id="floatingInput" placeholder="username" required>
+        </div>
+        <div class="form-floating">
+            <label for="floatingPassword">Password</label>
+            <input type="password" class="form-control" id="floatingPassword" name="Password" placeholder="password" required>
+        </div>
+        <div class="form-floating">
+            <label for="floatingEmail">Email</label>
+            <input type="text" class="form-control" id="floatingEmail" name="Email" placeholder="email" required>
+        </div>
+        <div class="form-floating">
+            <label for="floatingInput">Phone</label>
+            <input type="text" class="form-control" name="Phone" id="floatingInput" placeholder="phone number" required>
+        </div>
+        <div class="form-floating">
+            <input type="submit" class="btn btn-lg btn-primary" value="signup">
+        </div>
+    </form>
+</main>

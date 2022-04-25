@@ -15,16 +15,13 @@ namespace mapsmvcwebapp.Controllers
 
     public class HomeController : Controller
     {
-        private readonly FakeUsers _fetchUsers;
-        private mongoServiceUser _userDB;
+        private MongoCollection _userDB;
         private IGetClaimsProvider _userClaims;
 
         public HomeController(
-        FakeUsers users,
-        mongoServiceUser userDB,
+        MongoCollection userDB,
         IGetClaimsProvider userClaims)
         {
-            _fetchUsers = users;
             _userDB = userDB;
             _userClaims = userClaims;
         }
@@ -34,6 +31,52 @@ namespace mapsmvcwebapp.Controllers
         {
 
             return View();
+        }
+
+        [AllowAnonymous]
+        [HttpGet]
+        public IActionResult Signup(string returnUrl)
+        {
+            ViewData["ReturnUrl"] = returnUrl;
+            return View();
+
+        }
+
+        [AllowAnonymous]
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromForm] string firstname, string lastname, string username, string password, string email, string phone)
+        {
+            var user = await _userDB.GetAsync(username);
+            if(user != null)
+            {
+             TempData["Error"] = "There is an account under that username. Please provide a unique username";
+                return View();   
+            }
+            User newuser = new User();
+            Login data = new Login();
+            Name names = new Name();
+            data.username = username;
+            data.password = password;
+            names.first = firstname;
+            names.last = lastname;
+            newuser.login = data;
+            newuser.name = names;
+            newuser.email = email;
+            newuser.phone = phone;
+            await _userDB.CreateOneAsync(newuser);
+            var claims = new List<Claim>()
+                    {
+                        new Claim(ClaimTypes.Name, newuser.name.last),
+                        new Claim(ClaimTypes.GivenName, newuser.name.first),
+                        new Claim(ClaimTypes.MobilePhone, newuser.phone),
+                        new Claim(ClaimTypes.Email, newuser.email),
+                        new Claim("username", newuser.login.username)
+                    };
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+            await HttpContext.SignInAsync(claimsPrincipal);
+            Task.WaitAll();
+            return Redirect("/Home/Index");
         }
 
 
@@ -49,7 +92,10 @@ namespace mapsmvcwebapp.Controllers
         public async Task<IActionResult> Validate([FromForm] string username, string password, string returnUrl)
         {
             ViewData["ReturnUrl"] = returnUrl;
-            var user = _userDB.GetAsync(username).Result;
+            var user = await _userDB.GetAsync(username);
+            if(user == null){
+                 return BadRequest();
+            }
             if (user.login.password == password)
             {
                 var claims = new List<Claim>()
@@ -66,7 +112,11 @@ namespace mapsmvcwebapp.Controllers
                 Task.WaitAll();
                 return Redirect(returnUrl);
             }
+            if (user.login.password != password)
+            {
             TempData["Error"] = "Invalid Username or Password!";
+            return BadRequest();
+            }
             return View("login");
         }
 
@@ -82,21 +132,9 @@ namespace mapsmvcwebapp.Controllers
         [HttpPost("map")]
         public IActionResult Map([FromForm] string search)
         {
-            // Do some addrss validation 
             ViewBag.destination = search;
             return View();
         }
-
-
-
-
-       
-
-        public IActionResult Privacy()
-        {
-            return View();
-        }
-
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()

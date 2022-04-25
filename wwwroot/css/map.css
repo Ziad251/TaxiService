@@ -1,12 +1,90 @@
 
+.form-control {
+    position: absolute;
+    width: 50%;
+    bottom: 100px;
+    right: 25%;
+}
+.wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
 #myMap {
-    width: 1000px;
-    height: 500px;
-    border: 1px;
-    border-color: black;
+    width: 100%;
+    height: 100%;
 }
 
-#SwitchToSecondRoute {
-    width: 100px; 
-    height: 100px;
+#FindNearest {
+    position: absolute;
+    bottom: 40px;
+    left: calc(100% - 200px);
+    width: 200px;
+    height: 40px;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-size: large;
+    font-weight: bolder;
+    color: white;
+    background-color:rgb(24, 106, 37);
+    text-align: center;
+    vertical-align: middle;
+
 }
+
+#price {
+   
+    position: absolute;
+    top: 40px;
+    right: calc(100% - 200px);
+    width: 200px;
+    height: 40px;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-size: large;
+    font-weight: bolder;
+    color: white;
+    background-color: rgb(24, 106, 37);
+    text-align: center;
+    vertical-align: middle;
+}
+
+
+
+#driverProfile {
+    position: absolute;
+    top: 40px;
+    right: calc(100% - 200px);
+    width: 200px;
+    height: 40px;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    text-align: center;
+    color: rgb(24, 106, 37);
+}
+#driverProfile p{
+    font-weight: bolder;
+font-size: 18px;
+text-align: center;
+    vertical-align: middle;
+}
+#driverProfile img{
+width: 100%;
+}
+
+#driverProfile button{
+    border: none;
+    outline: 0;
+    display: inline-block;
+    padding: 8px;
+    color: white;
+    background-color: rgb(24, 106, 37);
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+    width: 100%;
+    font-size: 18px;
+}
+
+#driverProfile button:hover {
+    opacity: 0.7;
+  }
+
+

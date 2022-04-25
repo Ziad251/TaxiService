@@ -6,11 +6,11 @@ using MongoDB.Driver.GeoJsonObjectModel;
 public class addUsersToDB
 {
     private FakeUsers _fetchUsers;
-    private mongoServiceUser _userDB;
+    private MongoCollection _userDB;
 
     public addUsersToDB(
     FakeUsers users,
-        mongoServiceUser userDB)
+        MongoCollection userDB)
     {
         _fetchUsers = users;
         _userDB = userDB;
