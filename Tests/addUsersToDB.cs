@@ -17,7 +17,7 @@ public class addUsersToDB
     }
     public async Task FetchTestUsers()
     {
-        var data = _fetchUsers.GetRandomUsers(400);
+        var data = await _fetchUsers.GetRandomUsers(400);
         Mulberry32 _m32 = new Mulberry32(345345345);
 
         for (int i = 0; i < 400; i++)
@@ -37,9 +37,9 @@ public class addUsersToDB
                 ho[1] = ((float)(52.237049 + _m32.Next() / 10000));
 
                 cordinates.geo = GeoJson.Point(GeoJson.Position(ho[0], ho[1]));
-                if (data.Result.results[i].location.cordinates == null)
+                if (data.results[i].location.cordinates == null)
                 {
-                    data.Result.results[i].location.cordinates = cordinates;
+                    data.results[i].location.cordinates = cordinates;
                 }
             }
 
@@ -58,9 +58,9 @@ public class addUsersToDB
                 ho[1] = ((float)(52.237049 - _m32.Next() / 10000));
 
                 cordinates.geo = GeoJson.Point(GeoJson.Position(ho[0], ho[1]));
-                if (data.Result.results[i].location.cordinates == null)
+                if (data.results[i].location.cordinates == null)
                 {
-                    data.Result.results[i].location.cordinates = cordinates;
+                    data.results[i].location.cordinates = cordinates;
                 }
             }
 
@@ -79,9 +79,9 @@ public class addUsersToDB
                 ho[1] = ((float)(52.237049 + _m32.Next() / 10000));
 
                 cordinates.geo = GeoJson.Point(GeoJson.Position(ho[0], ho[1]));
-                if (data.Result.results[i].location.cordinates == null)
+                if (data.results[i].location.cordinates == null)
                 {
-                    data.Result.results[i].location.cordinates = cordinates;
+                    data.results[i].location.cordinates = cordinates;
                 }
             }
             if (i > 300 && i < 400)
@@ -99,16 +99,16 @@ public class addUsersToDB
                 ho[1] = ((float)(52.237049 - _m32.Next() / 10000));
 
                 cordinates.geo = GeoJson.Point(GeoJson.Position(ho[0], ho[1]));
-                if (data.Result.results[i].location.cordinates == null)
+                if (data.results[i].location.cordinates == null)
                 {
-                    data.Result.results[i].location.cordinates = cordinates;
+                    data.results[i].location.cordinates = cordinates;
                 }
             }
 
         }
 
 
-        await _userDB.CreateManyAsync(data.Result.results);
+        await _userDB.CreateManyAsync(data.results);
 
     }
 }
